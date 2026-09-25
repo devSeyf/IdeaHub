@@ -7,4 +7,9 @@ public class IdeaResponseDto
     public DateTime CreatedAt { get; set; }
     public Guid? UserId { get; set; }
     public string? UserName { get; set; }
+
+    public int LikesCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
+    public int CommentsCount { get; set; }
+
 }

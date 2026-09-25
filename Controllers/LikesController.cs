@@ -48,5 +48,24 @@ public class LikesController : ControllerBase
 
 
 
+    [HttpDelete("{ideaId}")]
+    public IActionResult UnlikeIdea(Guid ideaId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var like = _context.Likes.FirstOrDefault(l =>
+            l.IdeaId == ideaId &&
+            l.UserId == Guid.Parse(userId!)
+        );
+
+        if (like == null)
+            return NotFound("Like not found.");
+
+        _context.Likes.Remove(like);
+        _context.SaveChanges();
+
+        return NoContent();
+    }
+
 
 }

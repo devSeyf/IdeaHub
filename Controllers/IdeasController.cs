@@ -15,20 +15,33 @@ public class IdeasController : ControllerBase
     }
 
 
+
+
     [HttpGet]
     public IActionResult GetIdeas()
     {
+
+        var userId = Guid.Parse(
+    User.FindFirst(ClaimTypes.NameIdentifier)!.Value
+);
         var ideas = _context.Ideas
     .Include(i => i.User).Select(i => new IdeaResponseDto
-{
-    Id = i.Id,
-    Title = i.Title,
-    Description = i.Description,
-    Category = i.Category,
-    CreatedAt = i.CreatedAt,
-    UserId = i.UserId,
-    UserName = i.User != null ? i.User.Name : null
-})
+    {
+        IsLikedByCurrentUser = _context.Likes.Any(l =>
+        l.IdeaId == i.Id &&
+        l.UserId == userId
+),
+
+        CommentsCount = _context.Comments.Count(c => c.IdeaId == i.Id),
+        Id = i.Id,
+        Title = i.Title,
+        Description = i.Description,
+        Category = i.Category,
+        CreatedAt = i.CreatedAt,
+        UserId = i.UserId,
+        UserName = i.User != null ? i.User.Name : null,
+        LikesCount = _context.Likes.Count(l => l.IdeaId == i.Id)
+    })
 
 
     .ToList();
@@ -70,49 +83,49 @@ public class IdeasController : ControllerBase
     }
 
 
-[HttpDelete("{id}")]
-public IActionResult DeleteIdea(Guid id)
-{
-    var idea = _context.Ideas.Find(id);
+    [HttpDelete("{id}")]
+    public IActionResult DeleteIdea(Guid id)
+    {
+        var idea = _context.Ideas.Find(id);
 
-    if (idea == null)
-        return NotFound();
+        if (idea == null)
+            return NotFound();
 
-    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    if (idea.UserId != Guid.Parse(userId!))
-        return Forbid();
+        if (idea.UserId != Guid.Parse(userId!))
+            return Forbid();
 
-    _context.Ideas.Remove(idea);
-    _context.SaveChanges();
+        _context.Ideas.Remove(idea);
+        _context.SaveChanges();
 
-    return NoContent();
-}
-
-
+        return NoContent();
+    }
 
 
- [HttpPut("{id}")]
-public IActionResult UpdateIdea(Guid id, UpdateIdeaDto dto)
-{
-    var idea = _context.Ideas.Find(id);
 
-    if (idea == null)
-        return NotFound();
 
-    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    [HttpPut("{id}")]
+    public IActionResult UpdateIdea(Guid id, UpdateIdeaDto dto)
+    {
+        var idea = _context.Ideas.Find(id);
 
-    if (idea.UserId != Guid.Parse(userId!))
-        return Forbid();
+        if (idea == null)
+            return NotFound();
 
-    idea.Title = dto.Title;
-    idea.Description = dto.Description;
-    idea.Category = dto.Category;
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-    _context.SaveChanges();
+        if (idea.UserId != Guid.Parse(userId!))
+            return Forbid();
 
-    return Ok(idea);
-}
+        idea.Title = dto.Title;
+        idea.Description = dto.Description;
+        idea.Category = dto.Category;
+
+        _context.SaveChanges();
+
+        return Ok(idea);
+    }
 
 
 }
