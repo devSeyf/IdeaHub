@@ -15,8 +15,6 @@ public class IdeasController : ControllerBase
     }
 
 
-
-
     [HttpGet]
     public IActionResult GetIdeas()
     {
