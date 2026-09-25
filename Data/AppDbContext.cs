@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
 
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Like> Likes { get; set; }
 
 
 
@@ -16,6 +17,13 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
+            .IsUnique();
+
+
+
+
+        modelBuilder.Entity<Like>()
+            .HasIndex(l => new { l.UserId, l.IdeaId })
             .IsUnique();
     }
 }
