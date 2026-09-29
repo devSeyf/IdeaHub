@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Idea } from "../types/Idea";
 import type { Comment } from "../types/Comment";
+import IdeaForm from "../components/IdeaForm";
 
 function FeedPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -11,6 +12,12 @@ function FeedPage() {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
 
   const [commentContent, setCommentContent] = useState("");
+
+
+  const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
 
   async function getIdeas() {
     const token = localStorage.getItem("token");
@@ -155,48 +162,46 @@ function FeedPage() {
 
 
 
-async function deleteIdea(ideaId: string) {
-  const token = localStorage.getItem("token");
+  async function deleteIdea(ideaId: string) {
+    const token = localStorage.getItem("token");
 
-  const response = await fetch(
-    `https://localhost:7134/api/ideas/${ideaId}`,
-    {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await fetch(
+      `https://localhost:7134/api/ideas/${ideaId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      getIdeas();
     }
-  );
-
-  if (response.ok) {
-    getIdeas();
   }
-}
-
+  function startEditing(idea: Idea) {
+    setEditingIdeaId(idea.id);
+    setEditTitle(idea.title);
+    setEditDescription(idea.description);
+    setEditCategory(idea.category);
+  }
   return (
     <div>
       <h1>IdeaHub Feed</h1>
 
       <div>
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+        <IdeaForm
+          title={title}
+          description={description}
+          category={category}
+          setTitle={setTitle}
+          setDescription={setDescription}
+          setCategory={setCategory}
+          onPublish={createIdea}
         />
 
-        <textarea
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
 
-        <input
-          placeholder="Category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
 
-        <button onClick={createIdea}>Publish Idea</button>
       </div>
       {ideas.map((idea) => (
         <div key={idea.id}>
@@ -214,10 +219,36 @@ async function deleteIdea(ideaId: string) {
           <button onClick={() => getComments(idea.id)}>
             Comments ({idea.commentsCount})
           </button>
-        {idea.userId === currentUserId && (
-  <button onClick={() => deleteIdea(idea.id)}>
-    Delete Idea
-  </button>
+     {idea.userId === currentUserId && (
+  <>
+    <button onClick={() => startEditing(idea)}>
+      Edit
+    </button>
+
+    <button onClick={() => deleteIdea(idea.id)}>
+      Delete Idea
+    </button>
+  </>
+)}
+
+
+{editingIdeaId === idea.id && (
+  <div>
+    <input
+      value={editTitle}
+      onChange={(e) => setEditTitle(e.target.value)}
+    />
+
+    <textarea
+      value={editDescription}
+      onChange={(e) => setEditDescription(e.target.value)}
+    />
+
+    <input
+      value={editCategory}
+      onChange={(e) => setEditCategory(e.target.value)}
+    />
+  </div>
 )}
 
           {selectedIdeaId === idea.id && (
