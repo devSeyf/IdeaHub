@@ -98,10 +98,15 @@ public IActionResult Login(LoginDto dto)
     var tokenString = new JwtSecurityTokenHandler()
         .WriteToken(token);
 
-    return Ok(new
-    {
-        token = tokenString
-    });
+ 
+
+return Ok(new
+{
+    token = tokenString,
+    userId = user.Id,
+    name = user.Name
+});
+
 }
 
 }

@@ -32,6 +32,7 @@ function LoginPage({ onLogin }: LoginPageProps) {
 
     const data = await response.json();
     localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.userId);
     onLogin();
     console.log("Token:", data.token);
   }
