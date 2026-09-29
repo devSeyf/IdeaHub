@@ -1,26 +1,15 @@
 import { useState } from "react";
+import LoginPage from "./pages/LoginPage";
+import FeedPage from "./pages/FeedPage";
 
 function App() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  return (
-    <div>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+  if (isLoggedIn) {
+    return <FeedPage />;
+  }
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-    </div>
-  );
+  return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
 }
 
 export default App;
