@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import type { Idea } from "../types/Idea";
 import type { Comment } from "../types/Comment";
 import IdeaForm from "../components/IdeaForm";
+import IdeaCard from "../components/IdeaCard";
+import api from "../services/api";
 
 function FeedPage() {
   const [ideas, setIdeas] = useState<Idea[]>([]);
@@ -13,20 +15,23 @@ function FeedPage() {
 
   const [commentContent, setCommentContent] = useState("");
 
-
   const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editCategory, setEditCategory] = useState("");
 
-  async function getIdeas() {
-    const token = localStorage.getItem("token");
+ 
 
-    const response = await fetch("https://localhost:7134/api/ideas", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+async function getIdeas() {
+  const response = await api.get<Idea[]>("/ideas");
+
+  setIdeas(response.data);
+}
+
+
+
+
+
 
     const data = await response.json();
 
@@ -56,6 +61,40 @@ function FeedPage() {
       getIdeas();
     }
   }
+
+
+  async function updateIdea(
+    ideaId: string,
+    title: string,
+    description: string,
+    category: string
+  ) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(
+      `https://localhost:7134/api/ideas/${ideaId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          category,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      getIdeas();
+    }
+  }
+
+
+
+
 
   async function createIdea() {
     const token = localStorage.getItem("token");
@@ -143,37 +182,17 @@ function FeedPage() {
     }
   }
 
-
-
-
-
-
-
-
-
   const currentUserId = localStorage.getItem("userId");
-
-
-
-
-
-
-
-
-
 
   async function deleteIdea(ideaId: string) {
     const token = localStorage.getItem("token");
 
-    const response = await fetch(
-      `https://localhost:7134/api/ideas/${ideaId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(`https://localhost:7134/api/ideas/${ideaId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (response.ok) {
       getIdeas();
@@ -199,85 +218,16 @@ function FeedPage() {
           setCategory={setCategory}
           onPublish={createIdea}
         />
-
-
-
       </div>
       {ideas.map((idea) => (
-        <div key={idea.id}>
-          <h3>{idea.title}</h3>
-          <p>{idea.description}</p>
-          <p>{idea.category}</p>
-          <p>By: {idea.userName}</p>
-          <p>Likes: {idea.likesCount}</p>
-          <p>Comments: {idea.commentsCount}</p>
-
-          <button onClick={() => toggleLike(idea)}>
-            {idea.isLikedByCurrentUser ? "Unlike" : "Like"}
-          </button>
-
-          <button onClick={() => getComments(idea.id)}>
-            Comments ({idea.commentsCount})
-          </button>
-     {idea.userId === currentUserId && (
-  <>
-    <button onClick={() => startEditing(idea)}>
-      Edit
-    </button>
-
-    <button onClick={() => deleteIdea(idea.id)}>
-      Delete Idea
-    </button>
-  </>
-)}
-
-
-{editingIdeaId === idea.id && (
-  <div>
-    <input
-      value={editTitle}
-      onChange={(e) => setEditTitle(e.target.value)}
-    />
-
-    <textarea
-      value={editDescription}
-      onChange={(e) => setEditDescription(e.target.value)}
-    />
-
-    <input
-      value={editCategory}
-      onChange={(e) => setEditCategory(e.target.value)}
-    />
-  </div>
-)}
-
-          {selectedIdeaId === idea.id && (
-            <div>
-              {comments.map((comment) => (
-                <div key={comment.id}>
-                  <strong>{comment.userName}</strong>
-                  <p>{comment.content}</p>
-
-                  {comment.userId === currentUserId && (
-                    <button onClick={() => deleteComment(comment.id, idea.id)}>
-                      Delete
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              <input
-                placeholder="Write a comment..."
-                value={commentContent}
-                onChange={(e) => setCommentContent(e.target.value)}
-              />
-
-              <button onClick={() => createComment(idea.id)}>
-                Add Comment
-              </button>
-            </div>
-          )}
-        </div>
+        <IdeaCard
+          key={idea.id}
+          idea={idea}
+          onToggleLike={toggleLike}
+          onDelete={deleteIdea}
+          onUpdate={updateIdea}
+          currentUserId={currentUserId}
+        />
       ))}
     </div>
   );
